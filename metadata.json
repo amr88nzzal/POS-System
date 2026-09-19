@@ -1,0 +1,6 @@
+{
+  "name": "نقطة البيع والمستودعات السحابية - Cloud POS & ERP",
+  "description": "منظومة نقاط بيع ومستودعات متكاملة تدعم العمل أوفلاين والطباعة المباشرة وإدارة المرتجعات وتتبع المندوبين ومزامنة الحسابات",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
