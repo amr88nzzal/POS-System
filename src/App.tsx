@@ -68,6 +68,9 @@ import { MobileAppScreen } from './components/MobileAppScreen';
 import { CurrencyModal } from './components/CurrencyModal';
 import { DigitalScaleModal } from './components/DigitalScaleModal';
 import { ProjectSettingsScreen } from './components/ProjectSettingsScreen';
+import { PinLoginScreen } from './components/PinLoginScreen';
+import { CollapsibleSideDrawer } from './components/CollapsibleSideDrawer';
+import { RetailPurchasesPOS } from './components/RetailPurchasesPOS';
 
 type ScreenTab =
   | 'pos'
@@ -85,6 +88,7 @@ type ScreenTab =
 
 export default function App() {
   // App state
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [currentTab, setCurrentTab] = useState<ScreenTab>('pos');
   const [lang, setLang] = useState<Language>('ar');
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
@@ -482,8 +486,34 @@ export default function App() {
       ? navTabs
       : navTabs.filter((tab) => tab.module === selectedModule);
 
+  // If user is not authenticated, render PIN Login Screen first
+  if (!isAuthenticated) {
+    return (
+      <PinLoginScreen
+        users={users}
+        onLoginSuccess={(user) => {
+          setCurrentUser(user);
+          setIsAuthenticated(true);
+        }}
+        lang={lang}
+        onToggleLang={() => setLang(lang === 'ar' ? 'en' : 'ar')}
+      />
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-900 flex flex-col font-sans text-slate-800 dark:text-slate-100 antialiased selection:bg-blue-500 selection:text-white transition-colors">
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-900 flex flex-col font-sans text-slate-800 dark:text-slate-100 antialiased selection:bg-blue-500 selection:text-white transition-colors relative">
+      {/* Collapsible Quick-Access Side Drawer Navigation */}
+      <CollapsibleSideDrawer
+        currentTab={currentTab}
+        onSelectTab={(tab) => setCurrentTab(tab as ScreenTab)}
+        lang={lang}
+        theme={theme}
+        onToggleTheme={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))}
+        onLockScreen={() => setIsAuthenticated(false)}
+        currentUser={currentUser}
+      />
+
       {/* Top Application Bar */}
       <Header
         lang={lang}
@@ -650,7 +680,7 @@ export default function App() {
         )}
 
         {currentTab === 'purchases' && (
-          <PurchasesScreen
+          <RetailPurchasesPOS
             products={products}
             warehouses={warehouses}
             suppliers={suppliers}
@@ -730,6 +760,10 @@ export default function App() {
             screenLayout={screenLayout}
             taxRates={taxRates}
             currencies={currencies}
+            suppliers={suppliers}
+            customers={customers}
+            costingMethod={costingMethod}
+            onCostingMethodChange={setCostingMethod}
             onUpdateUsers={handleUpdateUsers}
             onUpdateProducts={handleUpdateProducts}
             onUpdateCategoryStyles={handleUpdateCategoryStyles}
@@ -742,6 +776,9 @@ export default function App() {
               setCurrencies(newCurrencies);
               CurrencyService.saveCurrencies(newCurrencies);
             }}
+            onUpdateSuppliers={handleUpdateSuppliers}
+            onUpdateCustomers={handleUpdateCustomers}
+            onCloseSettings={() => setCurrentTab('pos')}
             lang={lang}
           />
         )}
