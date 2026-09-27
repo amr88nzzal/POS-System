@@ -3,29 +3,28 @@ import {
   ShoppingCart,
   RotateCcw,
   ShoppingBag,
-  Truck,
-  FileText,
-  CreditCard,
+  Layers,
   BarChart3,
-  Clock,
   Settings,
-  Lock,
+  FileText,
+  Smartphone,
   ChevronLeft,
   ChevronRight,
   Menu,
-  X,
-  Store,
-  Layers,
-  Sparkles,
-  Smartphone,
-  Navigation,
-  Utensils,
-  Moon,
+  Lock,
   Sun,
+  Moon,
+  Coins,
+  Scale,
+  Wifi,
+  WifiOff,
   Database,
-  Printer,
+  Globe,
+  HardDriveDownload,
+  Store,
+  Utensils,
 } from 'lucide-react';
-import { Language, User, ThemeMode } from '../types';
+import { Language, User, ThemeMode, Currency } from '../types';
 
 export type ScreenTab =
   | 'pos'
@@ -52,6 +51,12 @@ interface CollapsibleSideDrawerProps {
   onToggleTheme: () => void;
   heldOrdersCount?: number;
   posMode?: 'retail' | 'restaurant';
+  activeCurrency?: Currency;
+  onOpenCurrencyModal?: () => void;
+  onOpenScaleModal?: () => void;
+  isOnline?: boolean;
+  onToggleOnlineMode?: () => void;
+  onOpenBackupModal?: () => void;
 }
 
 export const CollapsibleSideDrawer: React.FC<CollapsibleSideDrawerProps> = ({
@@ -65,10 +70,16 @@ export const CollapsibleSideDrawer: React.FC<CollapsibleSideDrawerProps> = ({
   onToggleTheme,
   heldOrdersCount = 0,
   posMode = 'retail',
+  activeCurrency,
+  onOpenCurrencyModal,
+  onOpenScaleModal,
+  isOnline = true,
+  onToggleOnlineMode,
+  onOpenBackupModal,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Keyboard shortcut (Ctrl+B or Alt+M to toggle sidebar)
+  // Keyboard shortcut (Ctrl+B to toggle sidebar)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
@@ -88,7 +99,6 @@ export const CollapsibleSideDrawer: React.FC<CollapsibleSideDrawerProps> = ({
     badge?: string | number;
     badgeColor?: string;
     shortcut?: string;
-    adminOnly?: boolean;
   }[] = [
     {
       id: 'pos',
@@ -97,7 +107,7 @@ export const CollapsibleSideDrawer: React.FC<CollapsibleSideDrawerProps> = ({
       icon: posMode === 'restaurant' ? Utensils : ShoppingCart,
       shortcut: 'F1',
       badge: posMode === 'restaurant' ? 'طاولات' : 'كاشير',
-      badgeColor: 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400',
+      badgeColor: 'bg-emerald-500/20 text-emerald-400',
     },
     {
       id: 'returns',
@@ -113,7 +123,7 @@ export const CollapsibleSideDrawer: React.FC<CollapsibleSideDrawerProps> = ({
       icon: ShoppingBag,
       shortcut: 'F3',
       badge: 'نمط التجزئة',
-      badgeColor: 'bg-blue-500/20 text-blue-600 dark:text-blue-400',
+      badgeColor: 'bg-blue-500/20 text-blue-400',
     },
     {
       id: 'vouchers',
@@ -142,7 +152,7 @@ export const CollapsibleSideDrawer: React.FC<CollapsibleSideDrawerProps> = ({
       icon: Settings,
       shortcut: 'F10',
       badge: 'إدارة كاملة',
-      badgeColor: 'bg-indigo-500/20 text-indigo-600 dark:text-indigo-400',
+      badgeColor: 'bg-indigo-500/20 text-indigo-400',
     },
     {
       id: 'mobile',
@@ -154,18 +164,17 @@ export const CollapsibleSideDrawer: React.FC<CollapsibleSideDrawerProps> = ({
 
   return (
     <aside
-      className={`fixed top-0 ${
-        lang === 'ar' ? 'right-0' : 'left-0'
-      } h-screen z-40 bg-slate-900 border-l border-slate-800 text-slate-200 transition-all duration-300 shadow-2xl flex flex-col justify-between select-none ${
-        isExpanded ? 'w-72' : 'w-18'
+      className={`h-screen shrink-0 bg-slate-900 border-x border-slate-800 text-slate-200 transition-all duration-300 shadow-2xl flex flex-col justify-between select-none z-30 sticky top-0 ${
+        isExpanded ? 'w-72' : 'w-[72px]'
       }`}
     >
-      {/* Top Header with Brand & Collapse Toggle */}
-      <div>
-        <div className="p-3.5 border-b border-slate-800 flex items-center justify-between">
+      {/* Top Header & Navigation Links */}
+      <div className="flex flex-col min-h-0">
+        {/* Brand & Collapse Button */}
+        <div className="p-3 border-b border-slate-800 flex items-center justify-between gap-2">
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="w-10 h-10 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center transition-colors cursor-pointer border border-slate-700"
+            className="w-10 h-10 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center transition-colors cursor-pointer border border-slate-700 shrink-0"
             title={isExpanded ? 'طي القائمة (Ctrl+B)' : 'توسيع القائمة (Ctrl+B)'}
           >
             {isExpanded ? (
@@ -176,12 +185,19 @@ export const CollapsibleSideDrawer: React.FC<CollapsibleSideDrawerProps> = ({
           </button>
 
           {isExpanded && (
-            <div className="flex-1 mr-3 ml-3 text-right">
-              <div className="text-xs font-extrabold text-white flex items-center gap-1.5 truncate">
+            <div className="flex-1 text-right overflow-hidden">
+              <div className="text-xs font-black text-white flex items-center gap-1.5 truncate">
                 <Store className="w-4 h-4 text-blue-400 shrink-0" />
-                <span>نظام نقاط البيع</span>
+                <span className="truncate">نظام نقاط البيع</span>
+                <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-blue-900/60 text-blue-300 border border-blue-700/50">
+                  v2.5 Pro
+                </span>
               </div>
-              <div className="text-[10px] text-slate-400 font-mono">ERP Enterprise</div>
+              <div className="text-[10px] text-slate-400 font-mono flex items-center gap-1 truncate mt-0.5">
+                <span>الفرع الرئيسي</span>
+                <span className="w-1 h-1 rounded-full bg-slate-600"></span>
+                <span>نقطة بيع #01</span>
+              </div>
             </div>
           )}
         </div>
@@ -189,7 +205,7 @@ export const CollapsibleSideDrawer: React.FC<CollapsibleSideDrawerProps> = ({
         {/* Current Logged in User Bar */}
         {currentUser && (
           <div
-            className={`p-3 border-b border-slate-800/80 bg-slate-850/50 flex items-center gap-3 ${
+            className={`p-2.5 border-b border-slate-800/80 bg-slate-850/60 flex items-center gap-2.5 ${
               !isExpanded && 'justify-center'
             }`}
           >
@@ -197,7 +213,7 @@ export const CollapsibleSideDrawer: React.FC<CollapsibleSideDrawerProps> = ({
               src={currentUser.avatar}
               alt={currentUser.name}
               referrerPolicy="no-referrer"
-              className="w-9 h-9 rounded-xl object-cover border-2 border-emerald-500/80 shrink-0"
+              className="w-8 h-8 rounded-xl object-cover border-2 border-emerald-500/80 shrink-0 shadow-sm"
               title={`${currentUser.name} (${currentUser.role})`}
             />
 
@@ -206,7 +222,7 @@ export const CollapsibleSideDrawer: React.FC<CollapsibleSideDrawerProps> = ({
                 <div className="text-xs font-bold text-white truncate">{currentUser.name}</div>
                 <div className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>{currentUser.role === 'admin' ? 'مدير النظام' : 'كاشير نشط'}</span>
+                  <span className="truncate">{currentUser.role === 'admin' ? 'مدير النظام' : 'كاشير نشط'}</span>
                 </div>
               </div>
             )}
@@ -214,7 +230,7 @@ export const CollapsibleSideDrawer: React.FC<CollapsibleSideDrawerProps> = ({
         )}
 
         {/* Navigation Items List */}
-        <nav className="p-2 space-y-1.5 max-h-[calc(100vh-250px)] overflow-y-auto scrollbar-none">
+        <nav className="p-2 space-y-1 overflow-y-auto flex-1 max-h-[calc(100vh-380px)] scrollbar-none">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentTab === item.id;
@@ -238,16 +254,16 @@ export const CollapsibleSideDrawer: React.FC<CollapsibleSideDrawerProps> = ({
                 </div>
 
                 {isExpanded && (
-                  <div className="flex-1 flex items-center justify-between min-w-0">
+                  <div className="flex-1 flex items-center justify-between min-w-0 text-right">
                     <span className="truncate">{lang === 'ar' ? item.labelAr : item.labelEn}</span>
-                    <div className="flex items-center gap-1.5 shrink-0">
+                    <div className="flex items-center gap-1.5 shrink-0 mr-1.5">
                       {item.badge && (
                         <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-bold ${item.badgeColor || 'bg-slate-800 text-slate-300'}`}>
                           {item.badge}
                         </span>
                       )}
                       {item.shortcut && (
-                        <span className="text-[9px] font-mono px-1 py-0.5 rounded-sm bg-slate-800/80 text-slate-400 border border-slate-700">
+                        <span className="text-[9px] font-mono px-1 py-0.5 rounded bg-slate-800/80 text-slate-400 border border-slate-700">
                           {item.shortcut}
                         </span>
                       )}
@@ -268,31 +284,144 @@ export const CollapsibleSideDrawer: React.FC<CollapsibleSideDrawerProps> = ({
         </nav>
       </div>
 
-      {/* Bottom Footer Actions (Theme, Language, Lock Screen) */}
-      <div className="p-2.5 border-t border-slate-800 bg-slate-900/90 space-y-1.5">
-        {/* Theme Toggle */}
-        <button
-          onClick={onToggleTheme}
-          className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer ${
-            !isExpanded && 'justify-center'
-          }`}
-          title={theme === 'dark' ? 'التحويل للوضع النهاري' : 'التحويل للوضع الليلي'}
-        >
-          {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-blue-400" />}
-          {isExpanded && <span>{theme === 'dark' ? 'الوضع النهاري' : 'الوضع الليلي'}</span>}
-        </button>
+      {/* Lower Section (القسم السفلي - عرض المعلومات المهمة) */}
+      <div className="p-2 border-t border-slate-800 bg-slate-950/80 space-y-2">
+        {/* Quick Indicators Group (Currency, Scale, Online, Backup) */}
+        <div className={`grid ${isExpanded ? 'grid-cols-2 gap-1.5' : 'grid-cols-1 gap-1.5'}`}>
+          {/* Active Currency Button */}
+          {onOpenCurrencyModal && (
+            <button
+              onClick={onOpenCurrencyModal}
+              className={`flex items-center gap-1.5 p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-amber-300 border border-amber-500/20 text-xs font-bold cursor-pointer transition-colors ${
+                !isExpanded ? 'justify-center' : ''
+              }`}
+              title={lang === 'ar' ? 'العملة النشطة وأسعار الصرف' : 'Active Currency'}
+            >
+              <Coins className="w-4 h-4 text-amber-400 shrink-0" />
+              {isExpanded && (
+                <div className="text-right truncate">
+                  <div className="text-[10px] text-slate-400 leading-none">العملة</div>
+                  <div className="text-xs font-extrabold text-amber-300 truncate">
+                    {activeCurrency ? `${activeCurrency.code} (${activeCurrency.symbol})` : 'SAR (ر.س)'}
+                  </div>
+                </div>
+              )}
+            </button>
+          )}
 
-        {/* Lock Screen / Switch Staff Button */}
-        <button
-          onClick={onLockScreen}
-          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/60 transition-all cursor-pointer ${
-            !isExpanded && 'justify-center'
-          }`}
-          title="قفل الشاشة والعودة لتسجيل الدخول"
-        >
-          <Lock className="w-4 h-4 text-rose-400 shrink-0" />
-          {isExpanded && <span>قفل الشاشة / تبديل الكاشير</span>}
-        </button>
+          {/* Digital Scale Button */}
+          {onOpenScaleModal && (
+            <button
+              onClick={onOpenScaleModal}
+              className={`flex items-center gap-1.5 p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-emerald-300 border border-emerald-500/20 text-xs font-bold cursor-pointer transition-colors ${
+                !isExpanded ? 'justify-center' : ''
+              }`}
+              title={lang === 'ar' ? 'الميزان الإلكتروني' : 'Digital Scale'}
+            >
+              <Scale className="w-4 h-4 text-emerald-400 shrink-0" />
+              {isExpanded && (
+                <div className="text-right truncate">
+                  <div className="text-[10px] text-slate-400 leading-none">الميزان</div>
+                  <div className="text-xs font-extrabold text-emerald-300 truncate">إلكتروني جاهز</div>
+                </div>
+              )}
+            </button>
+          )}
+
+          {/* Online/Offline Status Indicator */}
+          {onToggleOnlineMode && (
+            <button
+              onClick={onToggleOnlineMode}
+              className={`flex items-center gap-1.5 p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 border text-xs font-bold cursor-pointer transition-colors ${
+                isOnline
+                  ? 'text-cyan-300 border-cyan-500/20'
+                  : 'text-amber-400 border-amber-500/30 bg-amber-950/30'
+              } ${!isExpanded ? 'justify-center' : ''}`}
+              title={isOnline ? 'النظام متصل بالإنترنت' : 'يعمل بنمط بدون اتصال (Offline)'}
+            >
+              {isOnline ? (
+                <Wifi className="w-4 h-4 text-cyan-400 shrink-0" />
+              ) : (
+                <WifiOff className="w-4 h-4 text-amber-400 shrink-0" />
+              )}
+              {isExpanded && (
+                <div className="text-right truncate">
+                  <div className="text-[10px] text-slate-400 leading-none">الاتصال</div>
+                  <div className="text-xs font-extrabold truncate">
+                    {isOnline ? 'متصل سحابياً' : 'أوفلاين محلي'}
+                  </div>
+                </div>
+              )}
+            </button>
+          )}
+
+          {/* Cloud Database / Backup Status */}
+          <button
+            onClick={() => {
+              if (onOpenBackupModal) {
+                onOpenBackupModal();
+              } else {
+                onSelectTab('settings');
+              }
+            }}
+            className={`flex items-center gap-1.5 p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-purple-300 border border-purple-500/20 text-xs font-bold cursor-pointer transition-colors ${
+              !isExpanded ? 'justify-center' : ''
+            }`}
+            title="قاعدة بيانات PostgreSQL والنسخ الاحتياطي"
+          >
+            <Database className="w-4 h-4 text-purple-400 shrink-0" />
+            {isExpanded && (
+              <div className="text-right truncate">
+                <div className="text-[10px] text-slate-400 leading-none">البيانات</div>
+                <div className="text-xs font-extrabold text-purple-300 flex items-center gap-1 truncate">
+                  <span>PostgreSQL</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                </div>
+              </div>
+            )}
+          </button>
+        </div>
+
+        {/* System Controls (Theme, Language, Lock Screen) */}
+        <div className={`flex items-center gap-1.5 ${isExpanded ? 'justify-between' : 'flex-col'}`}>
+          {/* Theme Toggle */}
+          <button
+            onClick={onToggleTheme}
+            className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer border border-slate-700 flex items-center justify-center flex-1"
+            title={theme === 'dark' ? 'التحويل للوضع النهاري' : 'التحويل للوضع الليلي'}
+          >
+            {theme === 'dark' ? (
+              <Sun className="w-4 h-4 text-amber-400" />
+            ) : (
+              <Moon className="w-4 h-4 text-blue-400" />
+            )}
+            {isExpanded && <span className="mr-1.5 text-xs font-semibold">{theme === 'dark' ? 'النهاري' : 'الليلي'}</span>}
+          </button>
+
+          {/* Language Toggle */}
+          {onToggleLanguage && (
+            <button
+              onClick={onToggleLanguage}
+              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer border border-slate-700 flex items-center justify-center flex-1"
+              title="تبديل لغة النظام (AR / EN)"
+            >
+              <Globe className="w-4 h-4 text-cyan-400" />
+              {isExpanded && <span className="mr-1.5 text-xs font-semibold">{lang === 'ar' ? 'English' : 'عربي'}</span>}
+            </button>
+          )}
+
+          {/* Lock Screen / Switch Staff Button */}
+          <button
+            onClick={onLockScreen}
+            className={`p-2 rounded-xl bg-rose-950/60 hover:bg-rose-900 text-rose-300 border border-rose-800/60 transition-all cursor-pointer flex items-center justify-center ${
+              isExpanded ? 'flex-1' : 'w-full'
+            }`}
+            title="قفل الشاشة والعودة لشاشة PIN"
+          >
+            <Lock className="w-4 h-4 text-rose-400 shrink-0" />
+            {isExpanded && <span className="mr-1.5 text-xs font-bold truncate">قفل</span>}
+          </button>
+        </div>
       </div>
     </aside>
   );

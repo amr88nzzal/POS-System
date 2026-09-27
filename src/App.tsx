@@ -502,117 +502,35 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-900 flex flex-col font-sans text-slate-800 dark:text-slate-100 antialiased selection:bg-blue-500 selection:text-white transition-colors relative">
-      {/* Collapsible Quick-Access Side Drawer Navigation */}
+    <div
+      className="h-screen bg-slate-100 dark:bg-slate-900 flex flex-row font-sans text-slate-800 dark:text-slate-100 antialiased selection:bg-blue-500 selection:text-white transition-colors overflow-hidden"
+      dir={lang === 'ar' ? 'rtl' : 'ltr'}
+    >
+      {/* Collapsible Quick-Access Side Navigation (Beside the main workspace) */}
       <CollapsibleSideDrawer
         currentTab={currentTab}
         onSelectTab={(tab) => setCurrentTab(tab as ScreenTab)}
         lang={lang}
+        onToggleLanguage={() => setLang((prev) => (prev === 'ar' ? 'en' : 'ar'))}
         theme={theme}
         onToggleTheme={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))}
         onLockScreen={() => setIsAuthenticated(false)}
         currentUser={currentUser}
-      />
-
-      {/* Top Application Bar */}
-      <Header
-        lang={lang}
-        onLanguageChange={setLang}
-        currentUser={currentUser}
-        onSwitchUser={handleSwitchUser}
-        syncStats={syncStats}
-        onTriggerSync={handleTriggerSync}
-        isOnline={isOnline}
-        onToggleOnlineMode={() => setIsOnline(!isOnline)}
-        onOpenMobileCompanion={() => setCurrentTab('mobile')}
-        theme={theme}
-        onToggleTheme={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))}
+        posMode={screenLayout.posMode}
         activeCurrency={activeCurrency}
         onOpenCurrencyModal={() => setShowCurrencyModal(true)}
         onOpenScaleModal={() => setShowScaleModal(true)}
+        isOnline={isOnline}
+        onToggleOnlineMode={() => setIsOnline(!isOnline)}
+        onOpenBackupModal={() => {
+          setBackupMessage(null);
+          setShowBackupModal(true);
+        }}
       />
 
-      {/* Main Secondary Navigation Bar - Reorganized with Module Filter and Cloud SQL Badge */}
-      <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-4 py-2 sticky top-[57px] z-20 shadow-xs no-print transition-colors space-y-2">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2.5">
-          {/* Module Categories Filter Pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto max-w-full pb-1 md:pb-0 scrollbar-none">
-            {MODULE_CATEGORIES.map((mod) => (
-              <button
-                key={mod.id}
-                onClick={() => setSelectedModule(mod.id)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-                  selectedModule === mod.id
-                    ? 'bg-slate-900 text-white dark:bg-blue-600 dark:text-white shadow-xs'
-                    : 'bg-slate-100 dark:bg-slate-750 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                }`}
-              >
-                {lang === 'ar' ? mod.labelAr : mod.labelEn}
-              </button>
-            ))}
-          </div>
-
-          {/* Cloud SQL PostgreSQL status and Backup */}
-          <div className="flex items-center gap-2 shrink-0 self-end md:self-auto">
-            {/* Cloud SQL Connection Status Pill */}
-            <button
-              onClick={() => setCurrentTab('settings')}
-              className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 rounded-lg text-[11px] font-bold cursor-pointer hover:bg-emerald-100 transition-colors"
-              title="Cloud SQL PostgreSQL (europe-west2) - متصل بنجاح"
-            >
-              <Database className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span className="hidden sm:inline">PostgreSQL (europe-west2)</span>
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            </button>
-
-            <button
-              onClick={() => {
-                setBackupMessage(null);
-                setShowBackupModal(true);
-              }}
-              className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg text-[11px] font-semibold transition-colors cursor-pointer"
-              title={lang === 'ar' ? 'النسخ الاحتياطي التلقائي واستعادة البيانات' : 'Backup & Restore'}
-            >
-              <HardDriveDownload className="w-3.5 h-3.5 text-blue-600" />
-              <span className="hidden sm:inline">{lang === 'ar' ? 'النسخ الاحتياطي' : 'Backup'}</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Screen Tabs within Selected Module */}
-        <div className="flex items-center gap-1.5 overflow-x-auto py-0.5 scrollbar-none max-w-full">
-          {visibleNavTabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = currentTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setCurrentTab(tab.id)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                  isActive
-                    ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20'
-                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-500'}`} />
-                <span>{lang === 'ar' ? tab.labelAr : tab.labelEn}</span>
-                {tab.badge && (
-                  <span
-                    className={`text-[9px] px-1.5 py-0.2 rounded-full font-semibold ${
-                      isActive ? 'bg-white/20 text-white' : 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300'
-                    }`}
-                  >
-                    {tab.badge}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Screen Render Container */}
-      <main className="flex-1 pb-10">
+      {/* Main Screen Content Area (Directly beside the sidebar, occupying full height & remaining width) */}
+      <div className="flex-1 min-w-0 h-screen overflow-y-auto flex flex-col bg-slate-100 dark:bg-slate-900">
+        <main className="flex-1 pb-10">
         {currentTab === 'pos' && (
           screenLayout.posMode === 'restaurant' ? (
             <RestaurantPOSScreen
@@ -801,6 +719,7 @@ export default function App() {
           />
         )}
       </main>
+      </div>
 
       {/* Auto Backup & Restore Modal */}
       {showBackupModal && (
