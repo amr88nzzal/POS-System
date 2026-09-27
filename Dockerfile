@@ -31,7 +31,6 @@ RUN npm install --omit=dev --legacy-peer-deps
 
 # Copy compiled assets from builder
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/public ./public
 
 # Expose server port
 EXPOSE 3000
