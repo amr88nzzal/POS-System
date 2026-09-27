@@ -32,7 +32,7 @@ services:
     container_name: pos_app
     restart: always
     ports:
-      - "${PORT:-3000}:3000"
+      - "${PORT:-3100}:3000"
     environment:
       NODE_ENV: production
       PORT: 3000
@@ -42,7 +42,7 @@ services:
       SQL_PASSWORD: ${POSTGRES_PASSWORD:-pos_password_2026}
       SQL_DB_NAME: ${POSTGRES_DB:-pos_db}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
-      APP_URL: ${APP_URL:-http://localhost:3000}
+      APP_URL: ${APP_URL:-http://localhost:3100}
     depends_on:
       postgres:
         condition: service_healthy
